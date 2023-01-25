@@ -113,3 +113,41 @@ movies %>% filter(str_detect(tolower(Release),"good night"))
 #consultar Worldwide Gross:
 #ex.: https://www.boxofficemojo.com/title/tt0110912/?ref_=bo_cso_table_2
 #obter ratings, runtime, PG-rating, mês de lançamento
+moviesFinal = movies2 %>% 
+  #filter(str_detect(Release,"Avatar: The Way of Water")) %>% 
+  mutate(parse_number(`Gross`)) %>% group_by(Release,`Release Date`) %>%
+  summarize(year=min(year),Gross=sum(parse_number(Gross)),Theaters=max(parse_number(Theaters)))%>% 
+  mutate(Release = ifelse(Release %in% df2$wrong,
+                          df2$right[match(Release, df2$wrong)],
+                          Release)) %>% 
+  mutate(Release = case_when(Release == "The Postman" & year == 1995~"The Postman (Il Postino)",
+                             TRUE~Release)) %>% 
+  mutate(nominated = case_when(Release %in% c(nominees$film)~1,TRUE~0),
+         nominated = case_when((Release =="Beauty and the Beast" & year == 2017)|
+                                 (Release =="Crash" & year == 1997)|
+                                 (Release =="Gladiator" & year == 1992)|
+                                 (Release =="Les Misérables" & year %in% c(2020,1998))|
+                                 (Release =="Little Women" & year %in% c(1994))~0,TRUE~nominated )
+  )
+
+
+ratings <- fread('title.ratings.tsv.gz', na = "\\N", quote = '')
+titles <- fread('title.basics.tsv.gz', na = "\\N", quote = '') %>% filter(startYear >= 1990)
+titles = titles %>% 
+  filter(titleType == "movie") %>% 
+  left_join(ratings,by=c("tconst"))
+
+titles = titles %>% group_by(primaryTitle) %>% arrange(primaryTitle,desc(numVotes)) %>% slice(1)
+
+moviesFinal %>% 
+  mutate(Release = ifelse(Release %in% df2$right,
+                          df2$wrong[match(Release, df2$right)],
+                          Release)) %>% 
+  filter(nominated == 1) %>% 
+  left_join(titles%>% 
+              filter(titleType == "movie"),by=c("Release"="primaryTitle")) %>% group_by(year) %>% 
+  summarize(mean(averageRating),mean(runtimeMinutes),mean(numVotes),mean(Gross)) %>% head()
+
+#ajustar valores por um coeficiente do ano (filmes indicados x filmes totais ou filmes não indicados)
+#ajustar $$ pelo ano (inflação)
+#fazer média móvel de N anos, já que são poucos filmes por ano (?)
