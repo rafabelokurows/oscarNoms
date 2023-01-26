@@ -139,15 +139,28 @@ titles = titles %>%
 
 titles = titles %>% group_by(primaryTitle) %>% arrange(primaryTitle,desc(numVotes)) %>% slice(1)
 
-moviesFinal %>% 
+# moviesFinal %>% 
+#   mutate(Release = ifelse(Release %in% df2$right,
+#                           df2$wrong[match(Release, df2$right)],
+#                           Release)) %>% 
+#   filter(nominated == 1) %>% 
+#   left_join(titles%>% 
+#               filter(titleType == "movie"),by=c("Release"="primaryTitle")) %>% group_by(year) %>% 
+#   summarize(mean(averageRating),mean(runtimeMinutes),mean(numVotes),mean(Gross)) %>% head()
+
+nominated = moviesFinal %>% 
   mutate(Release = ifelse(Release %in% df2$right,
                           df2$wrong[match(Release, df2$right)],
                           Release)) %>% 
   filter(nominated == 1) %>% 
   left_join(titles%>% 
-              filter(titleType == "movie"),by=c("Release"="primaryTitle")) %>% group_by(year) %>% 
-  summarize(mean(averageRating),mean(runtimeMinutes),mean(numVotes),mean(Gross)) %>% head()
+              filter(titleType == "movie"),by=c("Release"="primaryTitle")) 
+
+nominated %>% group_by(year) %>% 
+  summarize(mean(averageRating,na.rm=T),mean(runtimeMinutes,na.rm=T),mean(numVotes,na.rm=T),mean(Gross,na.rm=T))
 
 #ajustar valores por um coeficiente do ano (filmes indicados x filmes totais ou filmes não indicados)
 #ajustar $$ pelo ano (inflação)
 #fazer média móvel de N anos, já que são poucos filmes por ano (?)
+#https://rpubs.com/jasdumas/rotten-tomatoes
+#https://vastava.medium.com/how-to-scrape-rotten-tomatoes-for-historic-tomatometer-scores-426f01a55a0d
