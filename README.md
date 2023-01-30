@@ -1,3 +1,2 @@
-# Taking a quick look at recent Oscar Nominations
-
-How movie grossing relates to Oscar nominations?
+# Oscar Nominations
+Or: how public acclamataion translates to $$ and critic acclamation
